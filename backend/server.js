@@ -40,10 +40,30 @@ console.log('DEBUG — Allowed Origins:', allowedOrigins);
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      const allowed = [
+        'http://localhost:3000',
+        'https://pro1-drab.vercel.app',
+        /\.vercel\.app$/
+      ];
+
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowed.some((entry) =>
+        entry instanceof RegExp ? entry.test(origin) : entry === origin
+      )) {
+        return callback(null, true);
+      }
+
+      console.warn(`Blocked CORS origin: ${origin}`);
+      return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   })
 );
+
 
 app.use(express.json());
 
