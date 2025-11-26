@@ -47,21 +47,18 @@ app.use(errorHandler);
 
 // Port config
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-
-// Start server AFTER successful DB connection
 const startServer = async () => {
   try {
-    console.log("DEBUG — Attempting MongoDB connection…");
     await connectDB();
-    console.log("DEBUG — MongoDB connection established.");
 
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Backend server running on http://localhost:${PORT}`);
+    // IMPORTANT: only listen once and ONLY using Render's port
+    app.listen(PORT, () => {
+      console.log(`Server listening on port ${PORT}`);
     });
+
   } catch (error) {
-    console.error("CRITICAL — Failed to start server:", error);
+    console.error('Failed to start server', error);
     process.exit(1);
   }
 };
