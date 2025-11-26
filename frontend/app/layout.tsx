@@ -8,7 +8,7 @@ import { AuthProvider } from "@/context/auth-context"
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
 export const metadata: Metadata = {
-  title: "NexusFlow | Employee & Task Management",
+  title: "ProU-EMS | Employee & Task Management",
   description: "Premium Employee and Task Management System with stunning 3D visuals",
     generator: 'v0.app'
 }

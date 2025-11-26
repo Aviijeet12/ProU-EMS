@@ -55,7 +55,7 @@ export function Sidebar() {
               </div>
             </div>
             <span className="text-xl font-bold text-foreground">
-              Nexus<span className="text-primary">Flow</span>
+              ProU<span className="text-primary">-EMS</span>
             </span>
           </Link>
 

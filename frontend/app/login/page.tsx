@@ -56,7 +56,7 @@ export default function LoginPage() {
             <Sparkles className="w-6 h-6 text-primary" />
           </div>
           <span className="text-2xl font-bold">
-            Nexus<span className="text-primary">Flow</span>
+            ProU<span className="text-primary">-EMS</span>
           </span>
         </div>
 

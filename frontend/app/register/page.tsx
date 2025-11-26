@@ -63,7 +63,7 @@ export default function RegisterPage() {
             <Sparkles className="w-6 h-6 text-primary" />
           </div>
           <span className="text-2xl font-bold">
-            Nexus<span className="text-primary">Flow</span>
+            ProU<span className="text-primary">-EMS</span>
           </span>
         </div>
 
@@ -71,7 +71,7 @@ export default function RegisterPage() {
         <div className="glass rounded-3xl p-8 glow-primary">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold mb-2">Create Account</h1>
-            <p className="text-muted-foreground">Join NexusFlow and boost your productivity</p>
+            <p className="text-muted-foreground">Join ProU-EMS and boost your productivity</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
