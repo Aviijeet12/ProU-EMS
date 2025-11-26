@@ -23,7 +23,7 @@ console.log("DEBUG — Allowed Origins:", allowedOrigins);
 
 // CORS config
 app.use(cors({
-  origin: allowedOrigins,
+  origin: process.env.FRONTEND_URL,
   credentials: true,
 }));
 
@@ -47,6 +47,8 @@ app.use(errorHandler);
 
 // Port config
 const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 // Start server AFTER successful DB connection
 const startServer = async () => {
