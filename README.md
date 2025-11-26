@@ -1,3 +1,4 @@
+
 # Employee Task Management System
 
 A full-stack web application for managing employees and tasks, featuring authentication, CRUD operations, and per-user sample data. Built with Next.js (React), Express.js, and MongoDB.
@@ -28,14 +29,16 @@ A full-stack web application for managing employees and tasks, featuring authent
 ## Project Structure
 
 ```
-├── app/                # Next.js app directory (pages, layouts, protected routes)
-├── components/         # Reusable UI and feature components
-├── context/            # React context for auth and data
-├── hooks/              # Custom React hooks
-├── lib/                # Utility functions
-├── public/             # Static assets
-├── styles/             # Global CSS
-├── backend/            # Express.js backend (API, models, controllers, services)
+├── frontend/
+│   ├── app/                # Next.js app directory (pages, layouts, protected routes)
+│   ├── components/         # Reusable UI and feature components
+│   ├── context/            # React context for auth and data
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/                # Utility functions
+│   ├── public/             # Static assets
+│   ├── styles/             # Global CSS
+│   └── ...
+├── backend/
 │   ├── controllers/    # Route controllers
 │   ├── middleware/     # Express middleware
 │   ├── models/         # Mongoose models
@@ -112,6 +115,10 @@ npm install
 
 ---
 
+## License
+MIT
+
+---
 
 ## Author
-Avijit Pratap Singh
+Avijit Singh
