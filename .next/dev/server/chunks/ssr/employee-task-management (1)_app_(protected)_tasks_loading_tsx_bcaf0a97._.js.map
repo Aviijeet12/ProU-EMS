@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Avijit%20Singh/Downloads/employee-task-management%20%281%29/app/%28protected%29/tasks/loading.tsx"],"sourcesContent":["export default function Loading() {\n  return null\n}\n"],"names":[],"mappings":";;;;AAAe,SAAS;IACtB,OAAO;AACT"}}]
+}

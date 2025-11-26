@@ -13,23 +13,56 @@ dotenv.config();
 
 const app = express();
 
-// Explicit allowed frontend origins
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://127.0.0.1:3000"
+const defaultAllowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
 ];
 
-console.log("DEBUG — Allowed Origins:", allowedOrigins);
+const envOrigins =
+  process.env.FRONTEND_ORIGIN ||
+  process.env.FRONTEND_URL ||
+  process.env.VERCEL_URL;
 
-// CORS config
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-}));
+const parsedOrigins = envOrigins
+  ? envOrigins
+      .split(',')
+      .map((origin) =>
+        origin.startsWith('http')
+          ? origin.trim()
+          : `https://${origin.trim()}`
+      )
+      .filter(Boolean)
+  : [];
+
+
+const allowedOrigins = parsedOrigins.length ? parsedOrigins : defaultAllowedOrigins;
+
+console.log('DEBUG — Allowed Origins:', allowedOrigins);
+
+// Tighten CORS so only known origins are allowed during development
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.warn(`Blocked CORS origin: ${origin}`);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
 
 // Parsers and logging
 app.use(express.json());
-app.use(morgan('dev'));
+if (process.env.NODE_ENV !== 'production') {
+  app.use(morgan('dev'));
+}
 
 // Root health endpoint
 app.get('/api/health', (req, res) => {

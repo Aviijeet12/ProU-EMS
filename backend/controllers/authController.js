@@ -2,6 +2,7 @@ import { validationResult } from 'express-validator';
 import ApiResponse from '../utils/ApiResponse.js';
 import ApiError from '../utils/ApiError.js';
 import { registerUser, loginUser } from '../services/authService.js';
+import { seedSampleDataForUser } from '../services/sampleDataSeeder.js';
 
 export const register = async (req, res, next) => {
   try {
@@ -11,7 +12,17 @@ export const register = async (req, res, next) => {
     }
 
     const result = await registerUser(req.body);
-    res.status(201).json(new ApiResponse({ statusCode: 201, message: 'User registered', data: result }));
+
+    // Trigger sample data seeding (non-blocking)
+    seedSampleDataForUser(result.user.id).catch(console.error);
+
+    res.status(201).json(
+      new ApiResponse({
+        statusCode: 201,
+        message: 'User registered',
+        data: result,
+      })
+    );
   } catch (error) {
     next(error);
   }
