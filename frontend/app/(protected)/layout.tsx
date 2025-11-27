@@ -1,48 +1,61 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/context/auth-context"
-import { DataProvider } from "@/context/data-context"
-import { Sidebar } from "@/components/sidebar"
-import { ThreeBackground } from "@/components/three-background"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ProtectedLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth()
-  const router = useRouter()
+  const router = useRouter();
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/login")
+    async function verify() {
+      try {
+        const token = localStorage.getItem("proums_token");
+
+        // Not logged in → redirect to login
+        if (!token) {
+          router.replace("/login");
+          return;
+        }
+
+        // Validate token with backend
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/validate`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const data = await res.json();
+
+        // Invalid token → redirect
+        if (!data.success) {
+          router.replace("/login");
+          return;
+        }
+
+        // Token valid → allow render
+        setChecking(false);
+      } catch (err) {
+        router.replace("/login");
+      }
     }
-  }, [user, isLoading, router])
 
-  if (isLoading) {
+    verify();
+  }, [router]);
+
+  if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <ThreeBackground />
-        <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      <div className="flex h-screen items-center justify-center text-muted-foreground">
+        Loading...
       </div>
-    )
+    );
   }
 
-  if (!user) {
-    return null
-  }
-
-  return (
-    <DataProvider>
-      <ThreeBackground />
-      <Sidebar />
-      <main className="lg:pl-64 min-h-screen">
-        <div className="p-4 lg:p-8 pt-20 lg:pt-8">{children}</div>
-      </main>
-    </DataProvider>
-  )
+  // No providers here — they already wrap the entire app globally
+  return <>{children}</>;
 }

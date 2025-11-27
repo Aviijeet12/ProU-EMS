@@ -1,247 +1,235 @@
-// ...existing code from c:/Users/Avijit Singh/Downloads/employee-task-management (1)/context/data-context.tsx
-"use client"
+"use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
-import { useAuth } from "./auth-context"
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
+import { useAuth } from "@/context/auth-context";
 
 export interface Employee {
-  id: string
-  name: string
-  email: string
-  department: string
-  position: string
-  status: "active" | "inactive"
-  joinDate: string
+  _id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  position?: string;
+  owner: string;
+  department?: string;
+  status?: string;
 }
 
 export interface Task {
-  id: string
-  title: string
-  description: string
-  status: "pending" | "in-progress" | "completed"
-  priority: "low" | "medium" | "high"
-  assignedTo: string
-  dueDate: string
-  createdAt: string
+  _id: string;
+  title: string;
+  description?: string;
+  status: "todo" | "in-progress" | "done";
+  priority?: string;
+  assignee?: string | { _id: string; name?: string; email?: string; position?: string; status?: string; owner?: string; phone?: string; };
+  dueDate?: string;
+  createdAt: string;
+  owner: string | { _id: string; name?: string; email?: string; role?: string; };
 }
 
 interface DataContextType {
-  employees: Employee[]
-  tasks: Task[]
-  isLoading: boolean
-  refreshData: () => Promise<void>
-  addEmployee: (employee: Omit<Employee, "id">) => Promise<void>
-  updateEmployee: (id: string, employee: Partial<Employee>) => Promise<void>
-  deleteEmployee: (id: string) => Promise<void>
-  addTask: (task: Omit<Task, "id" | "createdAt">) => Promise<void>
-  updateTask: (id: string, task: Partial<Task>) => Promise<void>
-  deleteTask: (id: string) => Promise<void>
+  employees: Employee[];
+  tasks: Task[];
+  reload: () => Promise<void>;
+
+  addEmployee: (data: Partial<Employee>) => Promise<void>;
+  updateEmployee: (id: string, data: Partial<Employee>) => Promise<void>;
+  deleteEmployee: (id: string) => Promise<boolean>;
+
+  addTask: (data: Partial<Task>) => Promise<boolean>;
+  updateTask: (id: string, data: Partial<Task>) => Promise<boolean>;
+  deleteTask: (id: string) => Promise<boolean>;
+
+  getEmployeeTasks: (employeeId: string) => Task[];
+  getEmployeeById: (id: string) => Employee | undefined;
 }
 
-const DataContext = createContext<DataContextType | null>(null)
+const DataContext = createContext<DataContextType | null>(null);
+
+const API = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const { token } = useAuth()
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const apiBaseUrl = useMemo(() => process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000/api", [])
+  const { user } = useAuth();
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("proums_token")
+      : null;
 
-  const mapEmployeeFromApi = useCallback((employee: any): Employee => {
-    const join = employee.dateCreated ?? employee.createdAt ?? new Date().toISOString()
-    return {
-      id: employee.id ?? employee._id,
-      name: employee.name,
-      email: employee.email,
-      department: employee.department ?? "General",
-      position: employee.role ?? "Unknown",
-      status: employee.status?.toLowerCase() === "active" ? "active" : "inactive",
-      joinDate: new Date(join).toISOString().split("T")[0],
+  // Load Employees
+  const loadEmployees = async () => {
+    if (!token) return;
+
+    const res = await fetch(`${API}/employees`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      setEmployees(data.data);
+      console.log('DEBUG DataProvider: loaded employees', data.data);
     }
-  }, [])
+  };
 
-  const mapEmployeeToApi = (employee: Partial<Employee>) => {
-    const payload: Record<string, unknown> = {}
-    if (employee.name !== undefined) payload.name = employee.name
-    if (employee.email !== undefined) payload.email = employee.email
-    if (employee.department !== undefined) payload.department = employee.department
-    if (employee.position !== undefined) payload.role = employee.position
-    if (employee.status !== undefined) payload.status = employee.status === "active" ? "Active" : "Inactive"
-    return payload
-  }
+  // Load Tasks
+  const loadTasks = async () => {
+    if (!token) return;
 
-  const mapTaskFromApi = useCallback((task: any): Task => {
-    const status =
-      task.status?.toLowerCase() === "in-progress" ? "in-progress" : task.status?.toLowerCase() ?? "pending"
-    const priority = task.priority?.toLowerCase() ?? "medium"
-    const assigned = task.assignedEmployeeId
-    const assignedId = typeof assigned === "string" ? assigned : assigned?.id ?? assigned?._id ?? ""
-    const created = task.createdAt ?? task.dateCreated ?? new Date().toISOString()
-    return {
-      id: task.id ?? task._id,
-      title: task.title,
-      description: task.description ?? "",
-      status: status as Task["status"],
-      priority: priority as Task["priority"],
-      assignedTo: assignedId,
-      dueDate: (task.dueDate ?? new Date().toISOString()).split("T")[0],
-      createdAt: new Date(created).toISOString(),
+    const res = await fetch(`${API}/tasks`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      setTasks(data.data);
+      console.log('DEBUG DataProvider: loaded tasks', data.data);
     }
-  }, [])
+  };
 
-  const formatTaskStatusForApi = (status?: Task["status"]) => {
-    switch (status) {
-      case "in-progress":
-        return "In-progress"
-      case "completed":
-        return "Completed"
-      case "pending":
-      default:
-        return "Pending"
-    }
-  }
+  // Combined Loader
+  const reload = async () => {
+    await loadEmployees();
+    await loadTasks();
+    console.log('DEBUG DataProvider: reload complete', { employees, tasks, user });
+  };
 
-  const formatTaskPriorityForApi = (priority?: Task["priority"]) => {
-    switch (priority) {
-      case "high":
-        return "High"
-      case "low":
-        return "Low"
-      case "medium":
-      default:
-        return "Medium"
-    }
-  }
-
-  const mapTaskToApi = (task: Partial<Task>) => {
-    const payload: Record<string, unknown> = {}
-    if (task.title !== undefined) payload.title = task.title
-    if (task.description !== undefined) payload.description = task.description
-    if (task.dueDate !== undefined) payload.dueDate = task.dueDate
-    if (task.status !== undefined) payload.status = formatTaskStatusForApi(task.status)
-    if (task.priority !== undefined) payload.priority = formatTaskPriorityForApi(task.priority)
-    if (task.assignedTo !== undefined) payload.assignedEmployeeId = task.assignedTo
-    return payload
-  }
-
-  const authenticatedRequest = useCallback(
-    async (path: string, options?: RequestInit) => {
-      if (!token) {
-        throw new Error("User is not authenticated")
-      }
-
-      const response = await fetch(`${apiBaseUrl}${path}`, {
-        ...options,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          ...(options?.headers ?? {}),
-        },
-      })
-
-      if (response.status === 204) {
-        return null
-      }
-
-      const payload = await response.json().catch(() => null)
-      if (!response.ok) {
-        const errorMessage = payload?.message ?? "Request failed"
-        throw new Error(errorMessage)
-      }
-      return payload
-    },
-    [apiBaseUrl, token],
-  )
-
-  const fetchData = useCallback(async () => {
-    if (!token) {
-      setEmployees([])
-      setTasks([])
-      return
-    }
-    setIsLoading(true)
-    try {
-      const [employeeRes, taskRes] = await Promise.all([
-        authenticatedRequest("/employees"),
-        authenticatedRequest("/tasks"),
-      ])
-      setEmployees(employeeRes?.data?.map(mapEmployeeFromApi) ?? [])
-      setTasks(taskRes?.data?.map(mapTaskFromApi) ?? [])
-    } catch (error) {
-      console.error("Failed to fetch data", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [authenticatedRequest, mapEmployeeFromApi, mapTaskFromApi, token])
-
+  // Inject dummy tasks for demo if none exist
   useEffect(() => {
-    void fetchData()
-  }, [fetchData])
+    if (user) reload();
+  }, [user]);
 
-  const addEmployee = async (employee: Omit<Employee, "id">) => {
-    const payload = mapEmployeeToApi(employee)
-    const response = await authenticatedRequest("/employees", {
+
+  // CRUD Employee
+  const addEmployee = async (data: Partial<Employee>) => {
+    const res = await fetch(`${API}/employees`, {
       method: "POST",
-      body: JSON.stringify(payload),
-    })
-    const created = mapEmployeeFromApi(response.data)
-    setEmployees((prev) => [...prev, created])
-  }
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
 
-  const updateEmployee = async (id: string, employee: Partial<Employee>) => {
-    const payload = mapEmployeeToApi(employee)
-    const response = await authenticatedRequest(`/employees/${id}`, {
+    const result = await res.json();
+    if (result.success) await reload();
+  };
+
+  const updateEmployee = async (id: string, data: Partial<Employee>) => {
+    const res = await fetch(`${API}/employees/${id}`, {
       method: "PUT",
-      body: JSON.stringify(payload),
-    })
-    const updated = mapEmployeeFromApi(response.data)
-    setEmployees((prev) => prev.map((e) => (e.id === id ? updated : e)))
-  }
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await res.json();
+    if (result.success) await reload();
+  };
 
   const deleteEmployee = async (id: string) => {
-    await authenticatedRequest(`/employees/${id}`, { method: "DELETE" })
-    setEmployees((prev) => prev.filter((e) => e.id !== id))
-    setTasks((prev) => prev.map((task) => (task.assignedTo === id ? { ...task, assignedTo: "" } : task)))
-  }
+    const res = await fetch(`${API}/employees/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  const addTask = async (task: Omit<Task, "id" | "createdAt">) => {
-    const payload = mapTaskToApi(task)
-    const response = await authenticatedRequest("/tasks", {
+    const result = await res.json();
+    if (result.success) {
+      await reload();
+      return true;
+    }
+    return false;
+  };
+
+  // CRUD Task
+  const addTask = async (data: Partial<Task>) => {
+    const res = await fetch(`${API}/tasks`, {
       method: "POST",
-      body: JSON.stringify(payload),
-    })
-    const created = mapTaskFromApi(response.data)
-    setTasks((prev) => [...prev, created])
-  }
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
 
-  const updateTask = async (id: string, task: Partial<Task>) => {
-    const payload = mapTaskToApi(task)
-    const response = await authenticatedRequest(`/tasks/${id}`, {
+    const result = await res.json();
+    if (result.success) {
+      await reload();
+      return true;
+    }
+    return false;
+  };
+
+  const updateTask = async (id: string, data: Partial<Task>) => {
+    const res = await fetch(`${API}/tasks/${id}`, {
       method: "PUT",
-      body: JSON.stringify(payload),
-    })
-    const updated = mapTaskFromApi(response.data)
-    setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)))
-  }
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      await reload();
+      return true;
+    }
+    return false;
+  };
 
   const deleteTask = async (id: string) => {
-    await authenticatedRequest(`/tasks/${id}`, { method: "DELETE" })
-    setTasks((prev) => prev.filter((t) => t.id !== id))
-  }
+    const res = await fetch(`${API}/tasks/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      await reload();
+      return true;
+    }
+    return false;
+  };
 
   return (
     <DataContext.Provider
-      value={{ employees, tasks, isLoading, refreshData: fetchData, addEmployee, updateEmployee, deleteEmployee, addTask, updateTask, deleteTask }}
+      value={{
+        employees,
+        tasks,
+        reload,
+        addEmployee,
+        updateEmployee,
+        deleteEmployee,
+        addTask,
+        updateTask,
+        deleteTask,
+        getEmployeeTasks: (employeeId) =>
+          tasks.filter((t) => {
+            if (!employeeId) return false;
+            if (typeof t.assignee === "object" && t.assignee !== null && typeof (t.assignee as any)._id === "string") {
+              return (t.assignee as any)._id === employeeId;
+            }
+            return t.assignee === employeeId;
+          }),
+        getEmployeeById: (id) =>
+          employees.find((e) => e._id === id),
+      }}
     >
       {children}
     </DataContext.Provider>
-  )
+  );
 }
 
 export function useData() {
-  const context = useContext(DataContext)
-  if (!context) {
-    throw new Error("useData must be used within a DataProvider")
-  }
-  return context
+  const ctx = useContext(DataContext);
+  if (!ctx) throw new Error("useData must be used inside DataProvider");
+  return ctx;
 }

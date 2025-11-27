@@ -1,55 +1,22 @@
-import { Router } from 'express';
-import { body } from 'express-validator';
-import {
-  listTasks,
-  getTask,
-  createTaskHandler,
-  updateTaskHandler,
-  deleteTaskHandler,
-} from '../controllers/taskController.js';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+const express = require("express");
+const router = express.Router();
 
-const router = Router();
+const {
+  getTasks,
+  getTask,
+  createTask,
+  updateTask,
+  deleteTask,
+} = require("../controllers/taskController");
+
+const { authMiddleware } = require("../middleware/authMiddleware");
 
 router.use(authMiddleware);
 
-const createTaskValidation = [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').optional().isString(),
-  body('dueDate').isISO8601().withMessage('dueDate must be a valid date'),
-  body('status')
-    .optional()
-    .isIn(['Pending', 'In-progress', 'Completed'])
-    .withMessage('Invalid status value'),
-  body('priority')
-    .optional()
-    .isIn(['Low', 'Medium', 'High'])
-    .withMessage('Invalid priority value'),
-  body('assignedEmployeeId').isMongoId().withMessage('assignedEmployeeId must be a valid id'),
-];
+router.get("/", getTasks);
+router.post("/", createTask);
+router.get("/:id", getTask);
+router.put("/:id", updateTask);
+router.delete("/:id", deleteTask);
 
-const updateTaskValidation = [
-  body('title').optional().notEmpty().withMessage('Title cannot be empty'),
-  body('description').optional().isString(),
-  body('dueDate').optional().isISO8601().withMessage('dueDate must be a valid date'),
-  body('status')
-    .optional()
-    .isIn(['Pending', 'In-progress', 'Completed'])
-    .withMessage('Invalid status value'),
-  body('priority')
-    .optional()
-    .isIn(['Low', 'Medium', 'High'])
-    .withMessage('Invalid priority value'),
-  body('assignedEmployeeId')
-    .optional()
-    .isMongoId()
-    .withMessage('assignedEmployeeId must be a valid id'),
-];
-
-router.get('/', listTasks);
-router.get('/:id', getTask);
-router.post('/', createTaskValidation, createTaskHandler);
-router.put('/:id', updateTaskValidation, updateTaskHandler);
-router.delete('/:id', deleteTaskHandler);
-
-export default router;
+module.exports = router;

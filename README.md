@@ -1,30 +1,72 @@
 
-# Employee Task Management System
+# ProU-EMS: Employee Task Management System
 
-A full-stack web application for managing employees and tasks, featuring authentication, CRUD operations, and per-user sample data. Built with Next.js (React), Express.js, and MongoDB.
-
----
+## Overview
+ProU-EMS is a full-stack web application for managing employees and tasks. It features secure authentication, role-based dashboards, and real-time task tracking for admins and employees.
 
 ## Features
-
-- **User Authentication**: Register, login, JWT-based session management
-- **Employee Management**: Add, edit, delete, and view employees
-- **Task Management**: Assign, update, delete, and track tasks
-- **Per-User Sample Data**: New users see demo employees and tasks after registration
-- **Role-based Access**: Admin/user roles (extensible)
-- **Responsive UI**: Modern design with shadcn and Radix UI components
-- **API Integration**: Frontend uses REST API for all data operations
-
----
+- Secure registration and login (JWT)
+- Admin dashboard: manage employees and assign tasks
+- Employee dashboard: view, start, and complete assigned tasks
+- Demo data for new users
+- Responsive, modern UI
 
 ## Tech Stack
+- **Frontend:** Next.js, React, TypeScript, Tailwind CSS
+- **Backend:** Node.js, Express.js
+- **Database:** MongoDB (Mongoose)
 
-- **Frontend**: Next.js 16, React 19, TypeScript, shadcn, Radix UI
-- **Backend**: Node.js 18+, Express.js, MongoDB (Mongoose ODM)
-- **Auth**: JWT, bcrypt
-- **Dev Tools**: nodemon, morgan, dotenv
+## Quick Start
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Aviijeet12/ProU-EMS.git
+   cd ProU-EMS
+   ```
+2. **Install dependencies:**
+   ```bash
+   pnpm install
+   ```
+3. **Configure environment variables:**
+   - Set up `.env` files in both `backend` and `frontend` folders (see `.env.example`).
+4. **Start servers:**
+   ```bash
+   cd backend && pnpm run dev
+   cd ../frontend && pnpm run dev
+   ```
+5. **Open the app:**
+   - Frontend: [http://localhost:3000](http://localhost:3000)
+   - Backend: [http://localhost:5000](http://localhost:5000)
 
----
+## Usage
+- **Admin:** Add/edit employees, assign tasks
+- **Employee:** View and update assigned tasks
+
+## Environment Variables
+- `MONGO_URI`: MongoDB connection string
+- `JWT_SECRET`: JWT token secret
+- `FRONTEND_ORIGINS`: Allowed frontend URLs
+- `PORT`: Backend port
+
+## API Endpoints
+- `POST /api/auth/register` — Register new user
+- `POST /api/auth/login` — Login
+- `GET /api/auth/validate` — Validate JWT
+- `GET /api/employees` — List employees
+- `POST /api/employees` — Add employee
+- `PUT /api/employees/:id` — Update employee
+- `DELETE /api/employees/:id` — Delete employee
+- `GET /api/tasks` — List tasks
+- `POST /api/tasks` — Add task
+- `PUT /api/tasks/:id` — Update task
+- `DELETE /api/tasks/:id` — Delete task
+
+## Sample Data
+- On registration, each user receives demo employees and tasks for a quick start.
+
+## Troubleshooting
+- **Port conflicts**: Ensure only one backend server runs on port 5000. Use `npx kill-port 5000` if needed.
+- **CORS errors**: Check `FRONTEND_ORIGIN` in backend `.env` and allowed origins in `server.js`.
+- **MongoDB connection**: Verify `MONGO_URI` in backend `.env`.
 
 ## Project Structure
 
@@ -84,39 +126,6 @@ npm install
   ```sh
   pnpm dev
   ```
-
----
-
-## API Endpoints
-
-- `POST /api/auth/register` — Register new user
-- `POST /api/auth/login` — Login
-- `GET /api/auth/validate` — Validate JWT
-- `GET /api/employees` — List employees
-- `POST /api/employees` — Add employee
-- `PUT /api/employees/:id` — Update employee
-- `DELETE /api/employees/:id` — Delete employee
-- `GET /api/tasks` — List tasks
-- `POST /api/tasks` — Add task
-- `PUT /api/tasks/:id` — Update task
-- `DELETE /api/tasks/:id` — Delete task
-
----
-
-## Sample Data
-- On registration, each user receives demo employees and tasks for a quick start.
-
----
-
-## Troubleshooting
-- **Port conflicts**: Ensure only one backend server runs on port 5000. Use `npx kill-port 5000` if needed.
-- **CORS errors**: Check `FRONTEND_ORIGIN` in backend `.env` and allowed origins in `server.js`.
-- **MongoDB connection**: Verify `MONGO_URI` in backend `.env`.
-
----
-
-## License
-MIT
 
 ---
 

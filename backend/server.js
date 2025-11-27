@@ -1,101 +1,48 @@
-import express from 'express';
-import cors from 'cors';
-import morgan from 'morgan';
-import dotenv from 'dotenv';
+require("dotenv").config();
+const express = require("express");
+const morgan = require("morgan");
+const cors = require("cors");
+const connectDB = require("./config/db");
 
-import connectDB from './config/db.js';
-import authRoutes from './routes/authRoutes.js';
-import employeeRoutes from './routes/employeeRoutes.js';
-import taskRoutes from './routes/taskRoutes.js';
-import { notFoundHandler, errorHandler } from './middleware/errorMiddleware.js';
+const authRoutes = require("./routes/authRoutes");
+const employeeRoutes = require("./routes/employeeRoutes");
+const taskRoutes = require("./routes/taskRoutes");
 
-dotenv.config();
+const { errorHandler } = require("./middleware/errorMiddleware");
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-const defaultAllowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-];
+// DB connection
+connectDB();
 
-const envOrigins =
-  process.env.FRONTEND_ORIGIN ||
-  process.env.FRONTEND_URL ||
-  process.env.VERCEL_URL;
+// Middlewares
+app.use(express.json());
+app.use(morgan("dev"));
 
-const parsedOrigins = envOrigins
-  ? envOrigins
-      .split(',')
-      .map((origin) =>
-        origin.startsWith('http')
-          ? origin.trim()
-          : `https://${origin.trim()}`
-      )
-      .filter(Boolean)
-  : [];
-
-const allowedOrigins = parsedOrigins.length ? parsedOrigins : defaultAllowedOrigins;
-
-console.log('DEBUG — Allowed Origins:', allowedOrigins);
+// CORS setup
+const allowed = (process.env.FRONTEND_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim());
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      const allowed = [
-        'http://localhost:3000',
-        'https://pro1-drab.vercel.app',
-        /\.vercel\.app$/
-      ];
-
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      if (allowed.some((entry) =>
-        entry instanceof RegExp ? entry.test(origin) : entry === origin
-      )) {
-        return callback(null, true);
-      }
-
-      console.warn(`Blocked CORS origin: ${origin}`);
-      return callback(new Error('Not allowed by CORS'));
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowed.includes(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"), false);
     },
     credentials: true,
   })
 );
 
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/employees", employeeRoutes);
+app.use("/api/tasks", taskRoutes);
 
-app.use(express.json());
 
-if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev'));
-}
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', uptime: process.uptime() });
-});
-
-app.use('/api/auth', authRoutes);
-app.use('/api/employees', employeeRoutes);
-app.use('/api/tasks', taskRoutes);
-
-app.use(notFoundHandler);
+// Error middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-
-const startServer = async () => {
-  try {
-    await connectDB();
-
-    app.listen(PORT, () =>
-      console.log(`Server running on port ${PORT}`)
-    );
-
-  } catch (error) {
-    console.error('Failed to start server', error);
-    process.exit(1);
-  }
-};
-
-startServer();
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

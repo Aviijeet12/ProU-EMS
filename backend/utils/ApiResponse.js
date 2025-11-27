@@ -1,14 +1,18 @@
 class ApiResponse {
-  constructor({ statusCode = 200, message = 'Success', data = null, meta = null }) {
-    this.success = statusCode < 400;
-    this.message = message;
-    if (data !== null) {
-      this.data = data;
-    }
-    if (meta) {
-      this.meta = meta;
-    }
+  static success(res, data = null, message = "OK", status = 200) {
+    return res.status(status).json({
+      success: true,
+      message,
+      data,
+    });
+  }
+
+  static error(res, message = "Error", status = 400) {
+    return res.status(status).json({
+      success: false,
+      message,
+    });
   }
 }
 
-export default ApiResponse;
+module.exports = ApiResponse;

@@ -1,82 +1,157 @@
-import Employee from '../models/Employee.js';
-import Task from '../models/Task.js';
+const Employee = require("../models/Employee");
+const Task = require("../models/Task");
 
-const addDays = (days) => {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date;
-};
+exports.seedDemoDataForUser = async (userId) => {
+  try {
+    // DEMO EMPLOYEES
+    const employees = await Employee.insertMany([
+      {
+        name: "John Russell",
+        email: "john.russell@example.com",
+        phone: "9876543210",
+        position: "Software Developer",
+        owner: userId,
+      },
+      {
+        name: "Priya Sharma",
+        email: "priya.sharma@example.com",
+        phone: "9123456780",
+        position: "Frontend Engineer",
+        owner: userId,
+      },
+      {
+        name: "Michael Tan",
+        email: "michael.tan@example.com",
+        phone: "9988776655",
+        position: "Backend Developer",
+        owner: userId,
+      },
+      {
+        name: "Sarah Williams",
+        email: "sarah.williams@example.com",
+        phone: "9090909090",
+        position: "UI/UX Designer",
+        owner: userId,
+      },
+      {
+        name: "David Miller",
+        email: "david.miller@example.com",
+        phone: "9012345678",
+        position: "QA Analyst",
+        owner: userId,
+      },
+      {
+        name: "Emily Brown",
+        email: "emily.brown@example.com",
+        phone: "9080706050",
+        position: "Project Manager",
+        owner: userId,
+      },
+      {
+        name: "Arjun Patel",
+        email: "arjun.patel@example.com",
+        phone: "9098765432",
+        position: "DevOps Engineer",
+        owner: userId,
+      },
+      {
+        name: "Lisa Chow",
+        email: "lisa.chow@example.com",
+        phone: "9001122334",
+        position: "Business Analyst",
+        owner: userId,
+      },
+    ]);
 
-const buildSampleEmployees = (userId) => {
-  const suffix = userId.toString().slice(-5);
-  return [
-    {
-      name: 'Ava Johnson',
-      email: `ava.johnson+${suffix}@example.com`,
-      role: 'Project Manager',
-      department: 'Operations',
-      status: 'Active',
-      createdBy: userId,
-    },
-    {
-      name: 'Ethan Patel',
-      email: `ethan.patel+${suffix}@example.com`,
-      role: 'Frontend Engineer',
-      department: 'Engineering',
-      status: 'Active',
-      createdBy: userId,
-    },
-    {
-      name: 'Mia Chen',
-      email: `mia.chen+${suffix}@example.com`,
-      role: 'HR Specialist',
-      department: 'People Operations',
-      status: 'Active',
-      createdBy: userId,
-    },
-  ];
-};
+    // Map employee IDs for assignment
+    const employeeIds = employees.map((e) => e._id);
 
-const buildSampleTasks = (userId, employees) => [
-  {
-    title: 'Launch dashboard redesign',
-    description: 'Coordinate with design to deliver the updated dashboard experience.',
-    dueDate: addDays(7),
-    status: 'In-progress',
-    priority: 'High',
-    assignedEmployeeId: employees[0]._id,
-    createdBy: userId,
-  },
-  {
-    title: 'Audit onboarding flow',
-    description: 'Review current onboarding flow and surface the top three friction points.',
-    dueDate: addDays(14),
-    status: 'Pending',
-    priority: 'Medium',
-    assignedEmployeeId: employees[1]._id,
-    createdBy: userId,
-  },
-  {
-    title: 'Update benefits handbook',
-    description: 'Refresh the People Ops handbook with the 2025 policy changes.',
-    dueDate: addDays(21),
-    status: 'Pending',
-    priority: 'Low',
-    assignedEmployeeId: employees[2]._id,
-    createdBy: userId,
-  },
-];
+    // DEMO TASKS
+    await Task.insertMany([
+      {
+        title: "Fix Login Redirect Bug",
+        description: "Investigate and fix incorrect redirection after login.",
+        assignee: employeeIds[0],
+        status: "in-progress",
+        owner: userId,
+        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      },
+      {
+        title: "Update Landing Page UI",
+        description: "Revamp hero section and align CTA buttons.",
+        assignee: employeeIds[1],
+        status: "todo",
+        owner: userId,
+        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      },
+      {
+        title: "API Documentation",
+        description: "Document employee CRUD operations in internal wiki.",
+        assignee: employeeIds[2],
+        status: "completed",
+        owner: userId,
+        dueDate: new Date(),
+      },
+      {
+        title: "UI Revision Round 2",
+        description: "Apply feedback from client review meeting.",
+        assignee: employeeIds[3],
+        status: "in-progress",
+        owner: userId,
+        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      },
+      {
+        title: "Write Unit Tests for User Module",
+        description: "Increase test coverage for authentication service.",
+        assignee: employeeIds[4],
+        status: "todo",
+        owner: userId,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+      {
+        title: "Deployment Pipeline Optimization",
+        description: "Reduce build time and optimize Docker layers.",
+        assignee: employeeIds[6],
+        status: "in-progress",
+        owner: userId,
+        dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+      },
+      {
+        title: "Prepare Client Report",
+        description: "Summarize project progress for Friday presentation.",
+        assignee: employeeIds[5],
+        status: "todo",
+        owner: userId,
+        dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+      },
+      {
+        title: "Database Schema Review",
+        description: "Evaluate schema relationships and propose improvements.",
+        assignee: employeeIds[7],
+        status: "todo",
+        owner: userId,
+        dueDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+      },
+      {
+        title: "Conduct Standup Meeting",
+        description: "Lead daily standup for frontend team.",
+        assignee: employeeIds[1],
+        status: "completed",
+        owner: userId,
+        dueDate: new Date(),
+      },
+      {
+        title: "UI Accessibility Fixes",
+        description: "Improve color contrast and add ARIA labels.",
+        assignee: employeeIds[3],
+        status: "in-progress",
+        owner: userId,
+        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      },
+    ]);
 
-export const seedSampleDataForUser = async (userId) => {
-  const existingEmployees = await Employee.countDocuments({ createdBy: userId });
-  if (existingEmployees > 0) {
-    return;
-  }
-
-  const employees = await Employee.insertMany(buildSampleEmployees(userId));
-
-  const existingTasks = await Task.countDocuments({ createdBy: userId });
-  if (existingTasks === 0 && employees.length) {
-    await Task.insertMany(buildSampleTasks(userId, employees));
+    console.log(`Realistic demo employees/tasks seeded for user: ${userId}`);
+  } catch (error) {
+    console.error("Realistic Demo Data Seed Error:", error);
   }
 };

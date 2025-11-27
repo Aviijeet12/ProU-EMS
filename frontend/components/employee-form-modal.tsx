@@ -1,46 +1,46 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { type Employee, useData } from "@/context/data-context"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "sonner"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { type Employee, useData } from "@/context/data-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface EmployeeFormModalProps {
-  isOpen: boolean
-  onClose: () => void
-  employee?: Employee | null
+  isOpen: boolean;
+  onClose: () => void;
+  employee?: Employee | null;
 }
 
-const departments = ["Engineering", "Design", "Marketing", "Product", "HR", "Finance", "Sales"]
+const departments = ["Engineering", "Design", "Marketing", "Product", "HR", "Finance", "Sales"];
 
 export function EmployeeFormModal({ isOpen, onClose, employee }: EmployeeFormModalProps) {
-  const { addEmployee, updateEmployee } = useData()
+  const { addEmployee, updateEmployee, reload } = useData();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     department: "",
     position: "",
     status: "active" as "active" | "inactive",
-    joinDate: new Date().toISOString().split("T")[0],
-  })
-  const [isLoading, setIsLoading] = useState(false)
+  });
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Pre-fill form when editing
   useEffect(() => {
     if (employee) {
       setFormData({
         name: employee.name,
-        email: employee.email,
-        department: employee.department,
-        position: employee.position,
-        status: employee.status,
-        joinDate: employee.joinDate,
-      })
+        email: employee.email ?? "",
+        department: employee.department ?? "",
+        position: employee.position ?? "",
+        status: employee.status === "inactive" ? "inactive" : "active",
+      });
     } else {
       setFormData({
         name: "",
@@ -48,74 +48,85 @@ export function EmployeeFormModal({ isOpen, onClose, employee }: EmployeeFormMod
         department: "",
         position: "",
         status: "active",
-        joinDate: new Date().toISOString().split("T")[0],
-      })
+      });
     }
-  }, [employee, isOpen])
+  }, [employee, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
-    if (!formData.department) {
-      toast.error("Please select a department")
-      setIsLoading(false)
-      return
-    }
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      department: formData.department,
+      position: formData.position,
+      status: formData.status,
+    };
 
-    try {
-      if (employee) {
-        await updateEmployee(employee.id, formData)
-        toast.success("Employee updated successfully")
-      } else {
-        await addEmployee(formData)
-        toast.success("Employee added successfully")
-      }
-      onClose()
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to save employee"
-      toast.error(message)
-    } finally {
-      setIsLoading(false)
+    setIsLoading(true);
+    if (employee && employee._id) {
+      await updateEmployee(employee._id, payload);
+      toast.success("Employee updated successfully");
+    } else {
+      await addEmployee(payload);
+      toast.success("Employee added successfully");
     }
-  }
+    await reload();
+    setIsLoading(false);
+    onClose();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="glass border-border/50 sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl">{employee ? "Edit Employee" : "Add New Employee"}</DialogTitle>
+          <DialogTitle className="text-xl">
+            {employee ? "Edit Employee" : "Add New Employee"}
+          </DialogTitle>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               placeholder="John Doe"
               required
               className="bg-secondary/50 border-border/50"
             />
           </div>
+
+          {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               placeholder="john@company.com"
               required
               className="bg-secondary/50 border-border/50"
             />
           </div>
+
           <div className="grid grid-cols-2 gap-4">
+            {/* Department */}
             <div className="space-y-2">
               <Label htmlFor="department">Department</Label>
               <Select
                 value={formData.department}
-                onValueChange={(value) => setFormData({ ...formData, department: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, department: value })
+                }
               >
                 <SelectTrigger className="bg-secondary/50 border-border/50">
                   <SelectValue placeholder="Select" />
@@ -129,11 +140,15 @@ export function EmployeeFormModal({ isOpen, onClose, employee }: EmployeeFormMod
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Status */}
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value: "active" | "inactive") => setFormData({ ...formData, status: value })}
+                onValueChange={(value: "active" | "inactive") =>
+                  setFormData({ ...formData, status: value })
+                }
               >
                 <SelectTrigger className="bg-secondary/50 border-border/50">
                   <SelectValue />
@@ -145,17 +160,22 @@ export function EmployeeFormModal({ isOpen, onClose, employee }: EmployeeFormMod
               </Select>
             </div>
           </div>
+
+          {/* Position */}
           <div className="space-y-2">
             <Label htmlFor="position">Position</Label>
             <Input
               id="position"
               value={formData.position}
-              onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, position: e.target.value })
+              }
               placeholder="Software Engineer"
               required
               className="bg-secondary/50 border-border/50"
             />
           </div>
+
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
@@ -165,6 +185,7 @@ export function EmployeeFormModal({ isOpen, onClose, employee }: EmployeeFormMod
             >
               Cancel
             </Button>
+
             <Button
               type="submit"
               disabled={isLoading}
@@ -176,5 +197,5 @@ export function EmployeeFormModal({ isOpen, onClose, employee }: EmployeeFormMod
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

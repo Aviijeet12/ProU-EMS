@@ -1,29 +1,18 @@
-import { Router } from 'express';
-import { body } from 'express-validator';
-import { register, login, validateToken } from '../controllers/authController.js';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+const express = require("express");
+const router = express.Router();
 
-const router = Router();
+const {
+  register,
+  login,
+  validate,
+} = require("../controllers/authController");
 
-router.post(
-  '/register',
-  [
-    body('username').notEmpty().withMessage('Username is required'),
-    body('email').isEmail().withMessage('Valid email is required'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  ],
-  register
-);
+const { authMiddleware } = require("../middleware/authMiddleware");
 
-router.post(
-  '/login',
-  [
-    body('email').isEmail().withMessage('Valid email is required'),
-    body('password').notEmpty().withMessage('Password is required'),
-  ],
-  login
-);
+router.post("/register", register);
+router.post("/login", login);
 
-router.get('/validate', authMiddleware, validateToken);
+// validate returns { success, user, role }
+router.get("/validate", authMiddleware, validate);
 
-export default router;
+module.exports = router;

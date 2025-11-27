@@ -1,98 +1,90 @@
-import { validationResult } from 'express-validator';
-import ApiResponse from '../utils/ApiResponse.js';
-import ApiError from '../utils/ApiError.js';
-import Employee from '../models/Employee.js';
+const Employee = require("../models/Employee");
 
-// ✅ List only employees belonging to logged-in user
-export const listEmployees = async (req, res, next) => {
+exports.getEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find({ createdBy: req.user.id }).sort({ createdAt: -1 });
-    res.json(new ApiResponse({ data: employees }));
+    // admin gets all
+    if (req.user.role === "admin") {
+      const employees = await Employee.find().populate("owner", "name email");
+      return res.json({ success: true, data: employees });
+    }
+
+    // user gets only their own
+    const employees = await Employee.find({ owner: req.user._id });
+    return res.json({ success: true, data: employees });
   } catch (error) {
-    next(error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ✅ Get single employee but ensure it belongs to the user
-export const getEmployee = async (req, res, next) => {
+exports.createEmployee = async (req, res) => {
   try {
-    const employee = await Employee.findOne({ _id: req.params.id, createdBy: req.user.id });
+    const { name, email, phone, position } = req.body;
 
-    if (!employee) {
-      throw new ApiError(404, 'Employee not found or access denied');
-    }
-
-    res.json(new ApiResponse({ data: employee }));
-  } catch (error) {
-    next(error);
-  }
-};
-
-// ✅ Create employee and attach logged-in user ID
-export const createEmployeeHandler = async (req, res, next) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new ApiError(400, 'Validation failed', errors.array());
-    }
-
-    const newEmployee = new Employee({
-      ...req.body,
-      createdBy: req.user.id, // IMPORTANT
+    const employee = await Employee.create({
+      name,
+      email,
+      phone,
+      position,
+      owner: req.user._id,
     });
 
-    const employee = await newEmployee.save();
-
-    res.status(201).json(
-      new ApiResponse({
-        statusCode: 201,
-        message: 'Employee created',
-        data: employee,
-      })
-    );
+    return res.status(201).json({ success: true, data: employee });
   } catch (error) {
-    next(error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ✅ Update only if employee belongs to logged-in user
-export const updateEmployeeHandler = async (req, res, next) => {
+exports.getEmployee = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new ApiError(400, 'Validation failed', errors.array());
+    const emp = await Employee.findById(req.params.id);
+
+    if (!emp)
+      return res.status(404).json({ success: false, message: "Not found" });
+
+    if (req.user.role !== "admin" && emp.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
-    const employee = await Employee.findOneAndUpdate(
-      { _id: req.params.id, createdBy: req.user.id },
-      req.body,
-      { new: true }
-    );
-
-    if (!employee) {
-      throw new ApiError(404, 'Employee not found or access denied');
-    }
-
-    res.json(new ApiResponse({ message: 'Employee updated', data: employee }));
+    return res.json({ success: true, data: emp });
   } catch (error) {
-    next(error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ✅ Delete only if employee belongs to logged-in user
-export const deleteEmployeeHandler = async (req, res, next) => {
+exports.updateEmployee = async (req, res) => {
   try {
-    const employee = await Employee.findOneAndDelete({
-      _id: req.params.id,
-      createdBy: req.user.id,
-    });
+    const emp = await Employee.findById(req.params.id);
 
-    if (!employee) {
-      throw new ApiError(404, 'Employee not found or access denied');
+    if (!emp)
+      return res.status(404).json({ success: false, message: "Not found" });
+
+    if (req.user.role !== "admin" && emp.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
-    res.json(new ApiResponse({ message: 'Employee deleted' }));
+    Object.assign(emp, req.body);
+    await emp.save();
+
+    return res.json({ success: true, data: emp });
   } catch (error) {
-    next(error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.deleteEmployee = async (req, res) => {
+  try {
+    const emp = await Employee.findById(req.params.id);
+
+    if (!emp)
+      return res.status(404).json({ success: false, message: "Not found" });
+
+    if (req.user.role !== "admin" && emp.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
+
+    await emp.deleteOne();
+    return res.json({ success: true, message: "Employee deleted" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -1,23 +1,19 @@
-import ApiError from '../utils/ApiError.js';
+const ApiError = require("../utils/ApiError");
 
-export const notFoundHandler = (req, res, next) => {
-  next(new ApiError(404, `Route ${req.originalUrl} not found`));
-};
+function errorHandler(err, req, res, next) {
+  console.error("ERROR:", err);
 
-export const errorHandler = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const response = {
+  if (err instanceof ApiError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+    });
+  }
+
+  return res.status(500).json({
     success: false,
-    message: err.message || 'Something went wrong',
-  };
+    message: "Internal Server Error",
+  });
+}
 
-  if (process.env.NODE_ENV !== 'production' && err.stack) {
-    response.stack = err.stack;
-  }
-
-  if (err.errors) {
-    response.errors = err.errors;
-  }
-
-  res.status(statusCode).json(response);
-};
+module.exports = { errorHandler };

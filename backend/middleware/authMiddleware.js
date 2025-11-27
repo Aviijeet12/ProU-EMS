@@ -1,26 +1,45 @@
-import jwt from 'jsonwebtoken';
-import ApiError from '../utils/ApiError.js';
-import User from '../models/User.js';
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-export const authMiddleware = async (req, res, next) => {
+exports.authMiddleware = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new ApiError(401, 'Authentication required');
+    let token = null;
+
+    // Standard Authorization header
+    if (req.headers && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
     }
 
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
-
-    if (!user) {
-      throw new ApiError(401, 'Invalid token');
+    // Fallback: cookie (if frontend sets cookie)
+    if (!token && req.headers && req.headers.cookie) {
+      const cookies = Object.fromEntries(
+        req.headers.cookie.split(";").map((c) => {
+          const [k, ...v] = c.split("=");
+          return [k.trim(), decodeURIComponent(v.join("=")).trim()];
+        })
+      );
+      if (cookies.proums_token) token = cookies.proums_token;
     }
 
+    if (!token) {
+      return res.status(401).json({ success: false, message: "No token provided" });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ success: false, message: "Token invalid or expired" });
+    }
+
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) return res.status(401).json({ success: false, message: "User not found" });
+
+    // attach user
     req.user = user;
     next();
-  } catch (error) {
-    const message = error.name === 'TokenExpiredError' ? 'Token expired' : error.message;
-    next(new ApiError(401, message));
+  } catch (err) {
+    console.error("Auth middleware error:", err);
+    return res.status(500).json({ success: false, message: "Authentication failed" });
   }
 };

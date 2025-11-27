@@ -1,95 +1,135 @@
-import { validationResult } from 'express-validator';
-import ApiResponse from '../utils/ApiResponse.js';
-import ApiError from '../utils/ApiError.js';
+const Task = require("../models/Task");
 
-import {
-  getTasks,
-  getTaskById,
-  createTask,
-  updateTask,
-  deleteTask,
-} from '../services/taskService.js';
-
-/**
- * ✅ List tasks belonging ONLY to logged-in user
- */
-export const listTasks = async (req, res, next) => {
+exports.getTasks = async (req, res) => {
   try {
-    const tasks = await getTasks({
-      ...req.query,
-      userId: req.user.id,
-    });
-
-    res.json(new ApiResponse({ data: tasks }));
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * ✅ Get single task but ensure it belongs to the user
- */
-export const getTask = async (req, res, next) => {
-  try {
-    const task = await getTaskById(req.params.id, req.user.id);
-
-    res.json(new ApiResponse({ data: task }));
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * ✅ Create task and attach logged-in user ID
- */
-export const createTaskHandler = async (req, res, next) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new ApiError(400, 'Validation failed', errors.array());
+    // admin sees all tasks
+    let filter = {};
+    if (req.user.role === "admin") {
+      filter = {};
+    } else {
+      // Find tasks where this user is the assignee (via employeeId) OR owner
+      const Employee = require("../models/Employee");
+      const employee = await Employee.findOne({ owner: req.user._id });
+      if (employee) {
+        // Return tasks assigned to this employee OR tasks where owner is this user
+        filter = {
+          $or: [
+            { assignee: employee._id },
+            { owner: req.user._id }
+          ]
+        };
+      } else {
+        // Return tasks where owner is this user (for demo tasks)
+        filter = { owner: req.user._id };
+      }
     }
 
-    const task = await createTask(req.body, req.user.id);
+    console.log('DEBUG getTasks user:', req.user);
+    console.log('DEBUG getTasks filter:', JSON.stringify(filter));
+    const tasks = await Task.find(filter).populate("assignee").populate("owner");
+    console.log('DEBUG getTasks returned:', tasks.map(t => ({_id: t._id, title: t.title, assignee: t.assignee, owner: t.owner})));
 
-    res.status(201).json(
-      new ApiResponse({
-        statusCode: 201,
-        message: 'Task created',
-        data: task,
-      })
-    );
+    return res.json({ success: true, data: tasks });
   } catch (error) {
-    next(error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-/**
- * ✅ Update only if task belongs to logged-in user
- */
-export const updateTaskHandler = async (req, res, next) => {
+exports.createTask = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new ApiError(400, 'Validation failed', errors.array());
+    const payload = { ...req.body, owner: req.user._id };
+    // Ensure assignee is a valid ObjectId string
+    if (payload.assignee && typeof payload.assignee === "string") {
+      const mongoose = require("mongoose");
+      if (mongoose.Types.ObjectId.isValid(payload.assignee)) {
+        payload.assignee = new mongoose.Types.ObjectId(payload.assignee);
+      } else {
+        payload.assignee = undefined;
+      }
     }
 
-    const task = await updateTask(req.params.id, req.body, req.user.id);
+    const task = await Task.create(payload);
 
-    res.json(new ApiResponse({ message: 'Task updated', data: task }));
+    return res.status(201).json({ success: true, data: task });
   } catch (error) {
-    next(error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-/**
- * ✅ Delete only if task belongs to logged-in user
- */
-export const deleteTaskHandler = async (req, res, next) => {
+exports.getTask = async (req, res) => {
   try {
-    await deleteTask(req.params.id, req.user.id);
+    const task = await Task.findById(req.params.id);
 
-    res.json(new ApiResponse({ message: 'Task deleted' }));
+    if (!task)
+      return res.status(404).json({ success: false, message: "Not found" });
+
+    if (req.user.role !== "admin" && task.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
+
+    return res.json({ success: true, data: task });
   } catch (error) {
-    next(error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.updateTask = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+
+    if (!task)
+      return res.status(404).json({ success: false, message: "Not found" });
+
+    // Allow update if user is admin, owner, or assignee
+    const Employee = require("../models/Employee");
+    let isAssignee = false;
+    if (task.assignee) {
+      const employee = await Employee.findOne({ owner: req.user._id });
+      if (employee && (task.assignee.toString() === employee._id.toString())) {
+        isAssignee = true;
+      }
+    }
+    if (
+      req.user.role !== "admin" &&
+      task.owner.toString() !== req.user._id.toString() &&
+      !isAssignee
+    ) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
+
+    // Ensure assignee is a valid ObjectId string
+    if (req.body.assignee && typeof req.body.assignee === "string") {
+      const mongoose = require("mongoose");
+      if (mongoose.Types.ObjectId.isValid(req.body.assignee)) {
+        req.body.assignee = new mongoose.Types.ObjectId(req.body.assignee);
+      } else {
+        req.body.assignee = undefined;
+      }
+    }
+    Object.assign(task, req.body);
+    await task.save();
+
+    return res.json({ success: true, data: task });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.deleteTask = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+
+    if (!task)
+      return res.status(404).json({ success: false, message: "Not found" });
+
+    if (req.user.role !== "admin" && task.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
+
+    await task.deleteOne();
+
+    return res.json({ success: true, message: "Task deleted" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

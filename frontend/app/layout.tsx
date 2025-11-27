@@ -1,35 +1,37 @@
-import type React from "react"
-import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { Toaster } from "@/components/ui/sonner"
-import { AuthProvider } from "@/context/auth-context"
+import "./globals.css";
+import { Inter } from "next/font/google";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+import { ThemeProvider } from "@/components/theme-provider";
+import {ThreeBackground} from "@/components/three-background";
 
-export const metadata: Metadata = {
-  title: "ProU-EMS | Employee & Task Management",
-  description: "Premium Employee and Task Management System with stunning 3D visuals",
-    generator: 'v0.app'
-}
+import { AuthProvider } from "@/context/auth-context";
+import { DataProvider } from "@/context/data-context";
 
-export const viewport: Viewport = {
-  themeColor: "#0a0a12",
-}
+const inter = Inter({ subsets: ["latin"] });
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export const metadata = {
+  title: "Employee Task Manager",
+  description: "Manage employees and tasks",
+};
+
+import type { ReactNode } from "react";
+
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        <AuthProvider>
-          {children}
-          <Toaster position="top-right" richColors />
-        </AuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen bg-background antialiased relative`}>
+        {/* Background (your original UI effect) */}
+        <ThreeBackground />
+
+        {/* Theme + Providers */}
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <AuthProvider>
+            <DataProvider>
+              {children}
+            </DataProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
