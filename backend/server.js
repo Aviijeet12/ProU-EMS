@@ -20,29 +20,30 @@ connectDB();
 app.use(express.json());
 app.use(morgan("dev"));
 
-// CORS setup
-const allowed = (process.env.FRONTEND_ORIGINS || "")
-  .split(",")
-  .map((o) => o.trim());
-
+// FIXED CORS (No dynamic origin logic)
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowed.includes(origin)) return callback(null, true);
-      return callback(new Error("Not allowed by CORS"), false);
-    },
+    origin: [
+      "http://localhost:3000",
+      "https://your-frontend.vercel.app"
+    ],
     credentials: true,
   })
 );
 
-// Routes
+// Health check route
+app.get("/", (req, res) => {
+  res.send("Backend is running successfully");
+});
+
+// API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/tasks", taskRoutes);
 
-
 // Error middleware
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`Server running on Render on port ${PORT}`)
+);
