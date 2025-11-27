@@ -1,6 +1,7 @@
 
 # ProU-EMS: Employee Task Management System
 -Demo Vide - <br>
+-Admin Credentials : Email address - Admin@system.com , Password - 123456 <br>
 -Frontend : Vercel - https://pro2-delta.vercel.app <br>
 -Backend : Render - https://pro2-5ei8.onrender.com <br>
 ## Overview
