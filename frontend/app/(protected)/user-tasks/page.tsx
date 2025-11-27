@@ -5,13 +5,13 @@ import { TaskCard } from "@/components/task-card";
 import { useAuth } from "@/context/auth-context";
 
 export default function UserDashboardPage() {
-      console.log('DEBUG dashboard MOUNTED');
-    console.log('DEBUG dashboard tasks:', tasks);
-    console.log('DEBUG dashboard myTasks:', myTasks);
-    console.log('DEBUG dashboard fallbackTasks:', fallbackTasks);
-    console.log('DEBUG dashboard user:', user);
   const { tasks } = useData();
   const { user } = useAuth();
+
+  console.log('DEBUG dashboard MOUNTED');
+  console.log('DEBUG dashboard tasks:', tasks);
+  // myTasks, fallbackTasks are declared below
+  console.log('DEBUG dashboard user:', user);
 
   // Show tasks assigned to this employee OR owned by this user
   const myEmployeeId = user?.employeeId;
@@ -47,8 +47,17 @@ export default function UserDashboardPage() {
       title: "Demo Task 1",
       description: "This is a demo task for testing.",
       status: "todo" as "todo",
-      assignee: { email: user?.email },
-      owner: user?.id,
+      assignee: {
+        _id: "demo",
+        name: user?.name ?? "Demo User",
+        email: user?.email,
+        phone: undefined,
+        position: undefined,
+        owner: user?.id ?? "demo-owner",
+        department: undefined,
+        status: undefined,
+      },
+      owner: user?.id ?? "demo-owner",
       dueDate: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     },
@@ -57,8 +66,17 @@ export default function UserDashboardPage() {
       title: "Demo Task 2",
       description: "Another demo task for your dashboard.",
       status: "in-progress" as "in-progress",
-      assignee: { email: user?.email },
-      owner: user?.id,
+      assignee: {
+        _id: "demo",
+        name: user?.name ?? "Demo User",
+        email: user?.email,
+        phone: undefined,
+        position: undefined,
+        owner: user?.id ?? "demo-owner",
+        department: undefined,
+        status: undefined,
+      },
+      owner: user?.id ?? "demo-owner",
       dueDate: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     },
