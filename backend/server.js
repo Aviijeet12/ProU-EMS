@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
@@ -39,7 +38,12 @@ connectDB();
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Routes
+// Health check route (optional)
+app.get("/", (req, res) => {
+  res.send("Backend is running successfully");
+});
+
+// API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/tasks", taskRoutes);
