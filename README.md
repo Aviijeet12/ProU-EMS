@@ -1,9 +1,17 @@
 
 # ProU-EMS: Employee Task Management System
--Demo Vide - <br>
+-Demo Vide - https://drive.google.com/file/d/1fsFJk540aECwmE21wX_B3UkO0QH167UL/view?usp=sharing <br>
 -Admin Credentials : Email address - Admin@system.com , Password - 123456 <br>
 -Frontend : Vercel - https://pro2-delta.vercel.app <br>
 -Backend : Render - https://pro2-5ei8.onrender.com <br>
+
+## Bonus Tasks Implemented
+- Deployed the Frontend on Vercel
+- Deployed the Backend on Render
+- Implemented fully functional backend and frontend with REST apis
+- Implemented role-based access for normal users as Employees and an Admin
+- Database used MongoDB
+  
 ## Overview
 ProU-EMS is a full-stack web application for managing employees and tasks. It features secure authentication, role-based dashboards, and real-time task tracking for admins and employees.
 
