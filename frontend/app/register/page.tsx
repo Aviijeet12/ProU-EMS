@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThreeBackground } from "@/components/three-background";
-import { Zap, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 export default function RegisterPage() {
@@ -53,98 +52,108 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center px-4 relative">
       <ThreeBackground />
-
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
-            <Zap className="w-6 h-6 text-primary" />
-          </div>
-          <span className="text-2xl font-bold">
-            ProU-<span className="text-primary">EMS</span>
+      <div className="w-full max-w-sm mx-auto">
+        <div className="flex flex-col items-center mb-8">
+          <span className="text-2xl font-bold mb-1">
+            ProU-
+            <span className="text-primary">EMS</span>
+          </span>
+          <span className="text-xs text-muted-foreground">
+            Employee Management System
           </span>
         </div>
-
-        <div className="glass rounded-3xl p-8">
+        <div className="bg-card border border-border rounded-xl shadow-md p-6">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold mb-2">Create Employee Account</h1>
-            <p className="text-muted-foreground">Join ProU-EMS as an employee</p>
+            <h1 className="text-xl font-semibold mb-1">
+              Create Employee Account
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Join ProU-EMS as an employee
+            </p>
           </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="pl-11 h-12"
-                />
-              </div>
+            <div>
+              <Label
+                htmlFor="name"
+                className="text-sm font-medium"
+              >
+                Full Name
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="mt-1"
+              />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-11 h-12"
-                />
-              </div>
+            <div>
+              <Label
+                htmlFor="email"
+                className="text-sm font-medium"
+              >
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1"
+              />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-11 h-12"
-                />
-              </div>
+            <div>
+              <Label
+                htmlFor="password"
+                className="text-sm font-medium"
+              >
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1"
+              />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-11 h-12"
-                />
-              </div>
+            <div>
+              <Label
+                htmlFor="confirmPassword"
+                className="text-sm font-medium"
+              >
+                Confirm Password
+              </Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="mt-1"
+              />
             </div>
-
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 rounded-xl font-semibold mt-2 bg-accent text-accent-foreground"
+              className="w-full mt-2"
             >
-              {isLoading ? "Creating account..." : "Create Employee Account"}
+              {isLoading
+                ? "Creating account..."
+                : "Create Employee Account"}
             </Button>
           </form>
-
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline font-medium">
+            <Link
+              href="/login"
+              className="text-primary hover:underline font-medium"
+            >
               Sign In
             </Link>
           </div>
