@@ -1,6 +1,5 @@
 
 # ProU-EMS: Employee Task Management System
--Demo Video - https://drive.google.com/file/d/1fsFJk540aECwmE21wX_B3UkO0QH167UL/view?usp=sharing <br>
 -Frontend : Vercel - https://ems.avijitsingh.dev <br>
 -Backend : Render - https://pro2-5ei8.onrender.com <br>
 
